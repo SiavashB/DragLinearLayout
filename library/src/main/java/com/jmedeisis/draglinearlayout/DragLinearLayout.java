@@ -58,6 +58,18 @@ public class DragLinearLayout extends LinearLayout {
          * No guarantee is made as to which of the two has a lesser/greater position.
          */
         void onSwap(View firstView, int firstPosition, View secondView, int secondPosition);
+
+        /**
+         * Invoked after the dragged item is released and dropped into its final position (i.e. the
+         * finger is lifted off the screen). This is different than {@link this.onSwap()} which gets
+         * notified everytime the dragged item passes another item in the layout durring drag.
+         *
+         * this is useful if you want to only take action when the drag is finished, and not during.
+         *
+         * @param originalPosition the original position where the dragged item was picked up
+         * @param finalPosition the final position where the dragged item is dropped
+         */
+        void onDrop(int originalPosition, int finalPosition);
     }
 
     private OnViewSwapListener swapListener;
@@ -100,6 +112,8 @@ public class DragLinearLayout extends LinearLayout {
         private int startVisibility;
         private BitmapDrawable viewDrawable;
         private int position;
+        private int originalPosition;
+        private int finalPosition;
         private int startTop;
         private int height;
         private int totalDragOffset;
@@ -117,7 +131,8 @@ public class DragLinearLayout extends LinearLayout {
             this.view = view;
             this.startVisibility = view.getVisibility();
             this.viewDrawable = getDragDrawable(view);
-            this.position = position;
+            this.originalPosition = this.position = position;
+            this.finalPosition = -1;
             this.startTop = view.getTop();
             this.height = view.getHeight();
             this.totalDragOffset = 0;
@@ -155,7 +170,7 @@ public class DragLinearLayout extends LinearLayout {
             view = null;
             startVisibility = -1;
             viewDrawable = null;
-            position = -1;
+            originalPosition = position = -1;
             startTop = -1;
             height = -1;
             totalDragOffset = 0;
@@ -424,6 +439,7 @@ public class DragLinearLayout extends LinearLayout {
             }
         });
         draggedItem.settleAnimation.start();
+        swapListener.onDrop(draggedItem.originalPosition, draggedItem.position);
     }
 
     /**
